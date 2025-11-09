@@ -1,0 +1,8 @@
+﻿{
+  "report_type": "Sugar",
+  "parameters": {
+    "Fasting Blood Sugar (FBS)": 95,
+    "Post-Meal (PPBS)": 120
+  },
+  "gender": "Female"
+}

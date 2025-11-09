@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTrack - Health Report Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .parameter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .parameter-group {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .parameter-group h4 {
+            color: #4facfe;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .status-good {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-warning {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .status-critical {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .parameter-result {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .parameter-result.normal {
+            border-left-color: #28a745;
+        }
+
+        .parameter-result.abnormal {
+            border-left-color: #ffc107;
+        }
+
+        .parameter-result.critical {
+            border-left-color: #dc3545;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .history-section {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .history-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 MediMod</h1>
+            <p>AI-Powered Health Report Analysis</p>
+        </div>
+
+        <div class="main-content">
+            <form id="healthForm">
+                <div class="form-section">
+                    <h2>📋 Select Report Type</h2>
+                    <div class="form-group">
+                        <label for="reportType">Choose the type of health report:</label>
+                        <select id="reportType" name="reportType" required>
+                            <option value="">Select a report type...</option>
+                            <option value="Blood">Blood Test</option>
+                            <option value="Jaundice/ LFT">Liver Function Test (LFT)</option>
+                            <option value="Urine">Urine Analysis</option>
+                            <option value="Sugar">Blood Sugar Test</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender">Gender (for gender-specific ranges):</label>
+                        <select id="gender" name="gender">
+                            <option value="">Not specified</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>📊 Enter Test Values</h2>
+                    <div id="parameterInputs">
+                        <p>Please select a report type first to see the relevant parameters.</p>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="analyzeBtn">
+                    🔍 Analyze My Report
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing your health report...</p>
+            </div>
+
+            <div class="results" id="results">
+                <h2>📈 Analysis Results</h2>
+                <div id="analysisContent"></div>
+            </div>
+
+            <div class="history-section" id="historySection" style="display: none;">
+                <h2>📚 Previous Reports</h2>
+                <div id="historyContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Health standards data (simplified for demo)
+        const healthStandards = {
+            "Blood": {
+                "Hemoglobin (Hb)": { unit: "g/dL", male: "13-17", female: "12-15" },
+                "RBC Count": { unit: "mil/µL", male: "4.5-5.9", female: "4.1-5.1" },
+                "WBC Count": { unit: "/µL", range: "4000-11000" },
+                "Platelet Count": { unit: "/µL", range: "150000-450000" },
+                "Creatinine": { unit: "mg/dL", range: "0.6-1.3" },
+                "Urea": { unit: "mg/dL", range: "7-20" }
+            },
+            "Jaundice/ LFT": {
+                "Total Bilirubin": { unit: "mg/dL", range: "0.1-1.2" },
+                "Direct Bilirubin": { unit: "mg/dL", range: "0-0.3" },
+                "SGPT / ALT": { unit: "U/L", range: "7-56" },
+                "SGOT / AST": { unit: "U/L", range: "10-40" },
+                "ALP": { unit: "U/L", range: "44-147" },
+                "Albumin": { unit: "g/dL", range: "3.5-5" }
+            },
+            "Urine": {
+                "Glucose": { type: "categorical", options: ["Negative", "Positive"] },
+                "Protein": { type: "categorical", options: ["Negative", "Positive"] },
+                "Ketones": { type: "categorical", options: ["Negative", "Positive"] },
+                "Bilirubin": { type: "categorical", options: ["Negative", "Positive"] },
+                "Blood (RBC)": { type: "categorical", options: ["Negative", "Positive"] },
+                "WBC/Pus cells": { unit: "/HPF", range: "0-5" }
+            },
+            "Sugar": {
+                "Fasting Blood Sugar (FBS)": { unit: "mg/dL", range: "70-99" },
+                "Post-Meal (PPBS)": { unit: "mg/dL", range: "<140" },
+                "HbA1c (3-month avg)": { unit: "%", range: "<5.7" }
+            }
+        };
+
+        const reportTypeSelect = document.getElementById('reportType');
+        const parameterInputs = document.getElementById('parameterInputs');
+        const healthForm = document.getElementById('healthForm');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+
+        // Update parameter inputs when report type changes
+        reportTypeSelect.addEventListener('change', function() {
+            const selectedType = this.value;
+            if (selectedType && healthStandards[selectedType]) {
+                generateParameterInputs(selectedType);
+            } else {
+                parameterInputs.innerHTML = '<p>Please select a report type first to see the relevant parameters.</p>';
+            }
+        });
+
+        function generateParameterInputs(reportType) {
+            const parameters = healthStandards[reportType];
+            let html = '<div class="parameter-grid">';
+            
+            for (const [paramName, paramInfo] of Object.entries(parameters)) {
+                html += `
+                    <div class="parameter-group">
+                        <h4>${paramName}</h4>
+                `;
+                
+                if (paramInfo.type === 'categorical') {
+                    html += `
+                        <select name="${paramName}" class="parameter-input">
+                            <option value="">Select...</option>
+                    `;
+                    paramInfo.options.forEach(option => {
+                        html += `<option value="${option}">${option}</option>`;
+                    });
+                    html += '</select>';
+                } else {
+                    const unit = paramInfo.unit || '';
+                    const placeholder = paramInfo.range ? `Normal: ${paramInfo.range} ${unit}` : `Enter value in ${unit}`;
+                    html += `
+                        <input type="number" name="${paramName}" class="parameter-input" 
+                               placeholder="${placeholder}" step="0.01">
+                    `;
+                }
+                
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            parameterInputs.innerHTML = html;
+        }
+
+        // Analyze helpers (client-side, no API)
+        function parseRange(rangeStr, gender) {
+            if (!rangeStr) return { min: null, max: null, type: 'numeric' };
+            const s = String(rangeStr).trim();
+            if (s.includes('Negative')) return { min: 0, max: 0, type: 'negative' };
+            if (s.includes('<')) {
+                const m = s.match(/<(\d+\.?\d*)/);
+                return { min: null, max: m ? parseFloat(m[1]) : null, type: 'lt' };
+            }
+            const m = s.match(/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/);
+            if (m) return { min: parseFloat(m[1]), max: parseFloat(m[2]), type: 'range' };
+            return { min: null, max: null, type: 'unknown' };
+        }
+
+        function analyzeParameter(paramName, value, reportType, gender) {
+            const group = healthStandards[reportType] || {};
+            const std = group[paramName];
+            if (!std) {
+                return {
+                    parameter: paramName,
+                    value,
+                    normal_range: 'Unknown',
+                    status: 'Unknown',
+                    interpretation: 'Parameter not found in standards',
+                    recommendation: 'Consult healthcare provider',
+                    score: 0.5,
+                };
+            }
+
+            // Choose gender-specific range if present
+            let normalRange = std.range || '';
+            if (!normalRange && (std.male || std.female)) {
+                normalRange = gender === 'Male' ? std.male : (gender === 'Female' ? std.female : (std.male || std.female));
+            }
+            const parsed = parseRange(normalRange, gender);
+
+            // Categorical negative/positive
+            if (std.type === 'categorical' || parsed.type === 'negative') {
+                const isNegative = String(value).toLowerCase() === 'negative' || value === 0 || value === false;
+                return {
+                    parameter: paramName,
+                    value,
+                    normal_range: normalRange || 'Negative',
+                    status: isNegative ? 'Normal' : 'High',
+                    interpretation: isNegative ? 'Normal - No abnormality detected' : 'Abnormal result detected',
+                    recommendation: 'Hydrate well, maintain healthy diet; consult clinician if persistent',
+                    score: isNegative ? 1.0 : 0.2,
+                };
+            }
+
+            // Numeric
+            const num = Number(value);
+            if (Number.isNaN(num)) {
+                return {
+                    parameter: paramName,
+                    value,
+                    normal_range: normalRange || 'N/A',
+                    status: 'Unknown',
+                    interpretation: 'Invalid numeric value',
+                    recommendation: 'Re-enter a numeric value',
+                    score: 0.5,
+                };
+            }
+
+            let status = 'Unknown';
+            let score = 0.5;
+            let interpretation = 'Unable to determine normal range';
+            if (parsed.type === 'lt' && parsed.max != null) {
+                if (num <= parsed.max) { status = 'Normal'; score = 1.0; interpretation = 'Within normal range'; }
+                else { status = 'High'; score = 0.3; interpretation = 'Above normal range'; }
+            } else if (parsed.type === 'range' && parsed.min != null && parsed.max != null) {
+                if (num >= parsed.min && num <= parsed.max) { status = 'Normal'; score = 1.0; interpretation = 'Within normal range'; }
+                else if (num < parsed.min) { status = 'Low'; score = 0.3; interpretation = 'Below normal range'; }
+                else { status = 'High'; score = 0.3; interpretation = 'Above normal range'; }
+            }
+
+            if ((status === 'High' || status === 'Low') && score <= 0.3) status = 'Critical';
+
+            return {
+                parameter: paramName,
+                value,
+                normal_range: normalRange || 'N/A',
+                status,
+                interpretation,
+                recommendation: 'Maintain balanced diet and hydration; consult clinician if persistent',
+                score,
+            };
+        }
+
+        function generateAnalysis(reportType, parameters, gender) {
+            const parameterAnalyses = [];
+            const urgent = [];
+            const recs = [];
+
+            Object.entries(parameters).forEach(([name, val]) => {
+                const a = analyzeParameter(name, val, reportType, gender);
+                parameterAnalyses.push(a);
+                if (a.status === 'Critical') urgent.push(`${a.parameter}: ${a.recommendation}`);
+                else if (a.status === 'High' || a.status === 'Low') recs.push(`${a.parameter}: ${a.recommendation}`);
+            });
+
+            const overall = parameterAnalyses.length ? (parameterAnalyses.reduce((s, p) => s + (p.score || 0.5), 0) / parameterAnalyses.length) : 0.5;
+            const overall_status = overall >= 0.8 ? 'Good' : (overall >= 0.5 ? 'Needs Improvement' : 'Critical');
+            const normalCount = parameterAnalyses.filter(p => p.status === 'Normal').length;
+            const abnormal = parameterAnalyses.length - normalCount;
+            const summary = abnormal === 0
+                ? `All ${parameterAnalyses.length} parameters are within normal range.`
+                : (normalCount > abnormal
+                    ? `Most parameters (${normalCount}/${parameterAnalyses.length}) are normal. ${abnormal} need attention.`
+                    : `Several parameters (${abnormal}/${parameterAnalyses.length}) require attention.`);
+
+            return {
+                report_type: reportType,
+                overall_status,
+                overall_score: Number(overall.toFixed(2)),
+                parameter_analyses: parameterAnalyses,
+                summary,
+                urgent_actions: urgent,
+                general_recommendations: recs,
+            };
+        }
+
+        // Handle form submission (client-side analysis)
+        healthForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const reportType = formData.get('reportType');
+            const gender = formData.get('gender');
+            
+            // Collect parameter values
+            const parameters = {};
+            const parameterInputs = document.querySelectorAll('.parameter-input');
+            
+            parameterInputs.forEach(input => {
+                if (input.value.trim() !== '') {
+                    parameters[input.name] = input.value;
+                }
+            });
+            
+            if (Object.keys(parameters).length === 0) {
+                alert('Please enter at least one parameter value.');
+                return;
+            }
+            
+            // Show loading
+            loading.style.display = 'block';
+            results.classList.remove('show');
+            analyzeBtn.disabled = true;
+            
+            try {
+                const analysis = generateAnalysis(reportType, parameters, gender || null);
+                displayResults(analysis);
+                storeReportHistory(analysis, parameters);
+            } finally {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        function displayResults(analysis) {
+            const content = document.getElementById('analysisContent');
+            
+            let html = `
+                <div class="parameter-result ${analysis.overall_status.toLowerCase().replace(' ', '-')}">
+                    <h3>Overall Status: <span class="status-${analysis.overall_status.toLowerCase().replace(' ', '-')}">${analysis.overall_status}</span></h3>
+                    <p><strong>Score:</strong> ${analysis.overall_score}/1.0</p>
+                    <p><strong>Summary:</strong> ${analysis.summary}</p>
+                </div>
+            `;
+            
+            if (analysis.urgent_actions.length > 0) {
+                html += `
+                    <div class="parameter-result critical">
+                        <h4>🚨 Urgent Actions Required:</h4>
+                        <ul>
+                            ${analysis.urgent_actions.map(action => `<li>${action}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (analysis.general_recommendations.length > 0) {
+                html += `
+                    <div class="parameter-result abnormal">
+                        <h4>💡 Recommendations:</h4>
+                        <ul>
+                            ${analysis.general_recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            html += '<h4>📊 Parameter Details:</h4>';
+            
+            analysis.parameter_analyses.forEach(param => {
+                const statusClass = param.status.toLowerCase().replace(' ', '-');
+                html += `
+                    <div class="parameter-result ${statusClass}">
+                        <h5>${param.parameter}</h5>
+                        <p><strong>Value:</strong> ${param.value}</p>
+                        <p><strong>Normal Range:</strong> ${param.normal_range}</p>
+                        <p><strong>Status:</strong> <span class="status-${statusClass}">${param.status}</span></p>
+                        <p><strong>Interpretation:</strong> ${param.interpretation}</p>
+                        <p><strong>Recommendation:</strong> ${param.recommendation}</p>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = html;
+            results.classList.add('show');
+            
+            // Show history
+            displayHistory();
+        }
+
+        function storeReportHistory(analysis, parameters) {
+            const history = JSON.parse(localStorage.getItem('healthReports') || '[]');
+            const report = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                report_type: analysis.report_type,
+                parameters: parameters,
+                analysis: analysis
+            };
+            
+            history.unshift(report);
+            if (history.length > 10) {
+                history.pop(); // Keep only last 10 reports
+            }
+            
+            localStorage.setItem('healthReports', JSON.stringify(history));
+        }
+
+        function displayHistory() {
+            const history = JSON.parse(localStorage.getItem('healthReports') || '[]');
+            const historySection = document.getElementById('historySection');
+            const historyContent = document.getElementById('historyContent');
+            
+            if (history.length === 0) {
+                historySection.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            history.forEach(report => {
+                const date = new Date(report.timestamp).toLocaleDateString();
+                const time = new Date(report.timestamp).toLocaleTimeString();
+                
+                html += `
+                    <div class="history-item">
+                        <h5>${report.report_type} Report - ${date} ${time}</h5>
+                        <p><strong>Status:</strong> <span class="status-${report.analysis.overall_status.toLowerCase().replace(' ', '-')}">${report.analysis.overall_status}</span></p>
+                        <p><strong>Score:</strong> ${report.analysis.overall_score}/1.0</p>
+                        <p><strong>Parameters:</strong> ${Object.keys(report.parameters).length} values entered</p>
+                    </div>
+                `;
+            });
+            
+            historyContent.innerHTML = html;
+            historySection.style.display = 'block';
+        }
+
+        // Load history on page load
+        window.addEventListener('load', displayHistory);
+    </script>
+</body>
+</html>

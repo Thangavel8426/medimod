@@ -1,0 +1,72 @@
+{
+  "demo_reports": [
+    {
+      "name": "Normal Blood Test",
+      "report_type": "Blood",
+      "gender": "Male",
+      "parameters": {
+        "Hemoglobin (Hb)": 15.2,
+        "RBC Count": 5.1,
+        "WBC Count": 8000,
+        "Platelet Count": 280000,
+        "Creatinine": 1.0,
+        "Urea": 15
+      }
+    },
+    {
+      "name": "Elevated Blood Sugar",
+      "report_type": "Sugar",
+      "gender": "Female",
+      "parameters": {
+        "Fasting Blood Sugar (FBS)": 110,
+        "Post-Meal (PPBS)": 160,
+        "HbA1c (3-month avg)": 6.2
+      }
+    },
+    {
+      "name": "Liver Function Test",
+      "report_type": "Jaundice/ LFT",
+      "gender": "Male",
+      "parameters": {
+        "Total Bilirubin": 2.5,
+        "Direct Bilirubin": 0.8,
+        "SGPT / ALT": 65,
+        "SGOT / AST": 45,
+        "ALP": 120,
+        "Albumin": 4.2
+      }
+    },
+    {
+      "name": "Urine Analysis",
+      "report_type": "Urine",
+      "gender": "Female",
+      "parameters": {
+        "Glucose": "Negative",
+        "Protein": "Positive",
+        "Ketones": "Negative",
+        "Bilirubin": "Negative",
+        "Blood (RBC)": "Negative",
+        "WBC/Pus cells": 3
+      }
+    }
+  ],
+  "instructions": {
+    "how_to_use": [
+      "1. Start both services (ML service on port 8000, Web server on port 4000)",
+      "2. Open web_interface.html in your browser",
+      "3. Select a report type from the dropdown",
+      "4. Enter the parameter values from the demo data above",
+      "5. Click 'Analyze My Report' to see the AI analysis",
+      "6. View the results including status, recommendations, and parameter details",
+      "7. Check the history section to see previous reports"
+    ],
+    "features": [
+      "AI-powered analysis against medical standards",
+      "Multiple report types (Blood, LFT, Urine, Sugar)",
+      "Gender-specific normal ranges",
+      "Historical tracking and comparison",
+      "Personalized health recommendations",
+      "Urgent action alerts for critical values"
+    ]
+  }
+}
