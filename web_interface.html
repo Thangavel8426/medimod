@@ -210,8 +210,16 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏥 MediMod</h1>
-            <p>AI-Powered Health Report Analysis</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>🏥 MediMod</h1>
+                    <p>AI-Powered Health Report Analysis</p>
+                </div>
+                <div style="text-align: right;">
+                    <p id="userInfo" style="margin-bottom: 10px; font-size: 0.9em;"></p>
+                    <button onclick="logout()" style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: 600;">Logout</button>
+                </div>
+            </div>
         </div>
 
         <div class="main-content">
@@ -269,6 +277,27 @@
     </div>
 
     <script>
+        // Authentication Check
+        window.addEventListener('load', function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Display user info
+            const user = JSON.parse(currentUser);
+            document.getElementById('userInfo').textContent = `Welcome, ${user.name || user.email}`;
+        });
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            }
+        }
+
         // Health standards data (simplified for demo)
         const healthStandards = {
             "Blood": {
@@ -571,7 +600,11 @@
         }
 
         function storeReportHistory(analysis, parameters) {
-            const history = JSON.parse(localStorage.getItem('healthReports') || '[]');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const userEmail = currentUser.email || 'guest';
+            const storageKey = `healthReports_${userEmail}`;
+            
+            const history = JSON.parse(localStorage.getItem(storageKey) || '[]');
             const report = {
                 id: Date.now(),
                 timestamp: new Date().toISOString(),
@@ -585,11 +618,15 @@
                 history.pop(); // Keep only last 10 reports
             }
             
-            localStorage.setItem('healthReports', JSON.stringify(history));
+            localStorage.setItem(storageKey, JSON.stringify(history));
         }
 
         function displayHistory() {
-            const history = JSON.parse(localStorage.getItem('healthReports') || '[]');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const userEmail = currentUser.email || 'guest';
+            const storageKey = `healthReports_${userEmail}`;
+            
+            const history = JSON.parse(localStorage.getItem(storageKey) || '[]');
             const historySection = document.getElementById('historySection');
             const historyContent = document.getElementById('historyContent');
             
